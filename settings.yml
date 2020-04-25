@@ -1,0 +1,5 @@
+topic_lists:
+  type: list
+  default: ""
+  description:
+    en: "Comma seperated title, query and max for each topic list."
