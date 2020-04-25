@@ -1,21 +1,11 @@
+import { addSidebarProps } from 'discourse/plugins/discourse-layouts/discourse/lib/widgets';
+
 const default_max = 5;
 
 export default {
   name: 'layouts-topic-lists',
   initialize(container) {
-    const discoveryController = container.lookup('controller:discovery');
-    const topicController = container.lookup('controller:topic');
-    const userController = container.lookup('controller:user');
-    const appEvents = container.lookup("service:app-events");
     const store = container.lookup('store:main');
-    
-    const setProps = (props) => {
-      discoveryController.set('customSidebarProps', props);
-      topicController.set('customSidebarProps', props);
-      userController.set('customSidebarProps', props);
-      appEvents.trigger('sidebars:rerender');
-    }
-    
     const props = {
       topicLists: {},
       loadingTopicLists: true
@@ -34,7 +24,7 @@ export default {
     });
     
     if (!$.isEmptyObject(props.topicLists)) {
-      setProps(props);
+      addSidebarProps(props);
       
       const listNames = Object.keys(props.topicLists);
       listNames.forEach((name, index) => { 
@@ -53,7 +43,7 @@ export default {
           if (index === (listNames.length - 1)) {
             props.loadingTopicLists = false;
           }
-          setProps(props);
+          addSidebarProps(props);
         });
       })
     }
