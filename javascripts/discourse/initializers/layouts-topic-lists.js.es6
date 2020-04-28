@@ -1,10 +1,25 @@
-import { addSidebarProps } from 'discourse/plugins/discourse-layouts/discourse/lib/layouts';
-
 const default_max = 5;
 
 export default {
   name: 'layouts-topic-lists',
   initialize(container) {
+    const siteSettings = container.lookup('site-settings:main');
+    const site = container.lookup('site:main');
+    if (!siteSettings.layouts_enabled ||
+        (site.mobileView && !siteSettings.layouts_mobile_enabled)) return;
+        
+    let layoutsError;
+    let layouts;
+    
+    try {
+      layouts = requirejs('discourse/plugins/discourse-layouts/discourse/lib/layouts');
+    } catch(error) {
+      layoutsError = error;
+      console.error(layoutsError);
+    }
+    
+    if (layoutsError) return;
+    
     const store = container.lookup('store:main');
     const props = {
       topicLists: {},

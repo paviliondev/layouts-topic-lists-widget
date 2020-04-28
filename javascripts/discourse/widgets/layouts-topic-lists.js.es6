@@ -1,4 +1,3 @@
-import { createLayoutsWidget } from 'discourse/plugins/discourse-layouts/discourse/lib/layouts';
 import { createWidget } from "discourse/widgets/widget";
 import { getOwner } from "discourse-common/lib/get-owner";
 import DiscourseURL from "discourse/lib/url";
@@ -8,8 +7,18 @@ import { censor } from "pretty-text/censored-words";
 import { isRTL } from "discourse/lib/text-direction";
 import RawHtml from "discourse/widgets/raw-html";
 import Site from "discourse/models/site";
+    
+let layoutsError;
+let layouts;
 
-export default createLayoutsWidget('topic-lists', {
+try {
+  layouts = requirejs('discourse/plugins/discourse-layouts/discourse/lib/layouts');
+} catch(error) {
+  layouts = { createLayoutsWidget: createWidget };
+  console.error(error);
+}
+
+export default layouts.createLayoutsWidget('topic-lists', {
   html(attrs) {
     const { topicLists, loadingTopicLists } = attrs;
     return h('div.widget-inner', Object.keys(topicLists).map((name) => {
