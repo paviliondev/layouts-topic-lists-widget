@@ -1,4 +1,4 @@
-import { addSidebarProps } from 'discourse/plugins/discourse-layouts/discourse/lib/widgets';
+import { addSidebarProps } from 'discourse/plugins/discourse-layouts/discourse/lib/layouts';
 
 const default_max = 5;
 

@@ -1,3 +1,4 @@
+import { createLayoutsWidget } from 'discourse/plugins/discourse-layouts/discourse/lib/layouts';
 import { createWidget } from "discourse/widgets/widget";
 import { getOwner } from "discourse-common/lib/get-owner";
 import DiscourseURL from "discourse/lib/url";
@@ -8,13 +9,11 @@ import { isRTL } from "discourse/lib/text-direction";
 import RawHtml from "discourse/widgets/raw-html";
 import Site from "discourse/models/site";
 
-export default createWidget('layouts-topic-lists', {
-  tagName: 'div.layouts-topic-lists.widget-container',
-
+export default createLayoutsWidget('topic-lists', {
   html(attrs) {
     const { topicLists, loadingTopicLists } = attrs;
     return h('div.widget-inner', Object.keys(topicLists).map((name) => {
-      return this.attach('layouts-topic-list', {
+      return this.attach('layouts-topic-lists-list', {
         list: topicLists[name],
         loadingTopicLists
       })
@@ -22,8 +21,8 @@ export default createWidget('layouts-topic-lists', {
   }
 });
 
-createWidget("layouts-topic-list", {
-  tagName: "div.layouts-topic-list",
+createWidget("layouts-topic-lists-list", {
+  tagName: "div.layouts-topic-lists-list",
   
   html(attrs) {
     const { list, loadingTopicLists } = attrs;
