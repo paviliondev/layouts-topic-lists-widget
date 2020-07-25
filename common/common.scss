@@ -1,6 +1,27 @@
-.layouts-topic-lists-list {
+.layouts-topic-lists .list-titles {
+  margin-bottom: 10px;
+  
+  .list-title {
+    padding: 5px 0;
+    margin-right: 15px;
+    background-image: linear-gradient(180deg, transparent 95%, $primary-low 0);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    color: $primary;
+    
+    &.active {
+      background-image: linear-gradient(180deg, transparent 95%, $quaternary 0);
+    }
+    
+    &:last-of-type {
+      margin-right: 0;
+    }
+  }
+}
+
+.layouts-topic-list-widget {
   margin-bottom: 4px;
-  display: inline-block;
+  display: none;
   width: 100%;
   
   &:last-of-type {
@@ -26,7 +47,24 @@
       
       a {
         color: $primary-medium;
+        
+        &.unread {
+          color: $primary;
+        }
+      }
+      
+      &.placeholder-animation {
+        height: 10px;
+        margin: 15px 0;
+        
+        &:last-of-type {
+          margin-bottom: 0;
+        }
       }
     }
+  }
+  
+  &.active {
+    display: inline-block;
   }
 }

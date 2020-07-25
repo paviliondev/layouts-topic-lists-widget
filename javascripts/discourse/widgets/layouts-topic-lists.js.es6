@@ -19,37 +19,70 @@ try {
 }
 
 export default layouts.createLayoutsWidget('topic-lists', {
-  html(attrs) {
-    const { topicLists, loadingTopicLists } = attrs;
-    return h('div.widget-inner', Object.keys(topicLists).map((name) => {
-      return this.attach('layouts-topic-lists-list', {
-        list: topicLists[name],
-        loadingTopicLists
-      })
+  defaultState(attrs) {
+    return {
+      topicLists: attrs.topicLists
+    }
+  },
+  
+  html(attrs, state) {
+    const { topicLists } = state;
+        
+    return h('div.widget-inner', topicLists.map((listGroup) => {
+      return h('div.list-group', [
+        h('div.list-titles', listGroup.map(l => this.renderTitle(l))),
+        h('div.lists', listGroup.map((l) => this.renderList(l)))
+      ]);
     }));
+  },
+  
+  renderList(list) {
+    return this.attach('layouts-topic-list-widget', { list, side: this.attrs.side });
+  },
+  
+  renderTitle(list) {
+    return this.attach('link',{
+      action: 'changeList',
+      actionParam: list,
+      className: `list-title${list.active ? ' active' : ''}`,
+      contents: () => list.name
+    });
+  },
+  
+  changeList(list) {    
+    this.state.topicLists.forEach((group, index) => {
+      if (index == list.groupIndex) {
+        group.forEach(l => {
+          l.active = list.name === l.name
+        });
+      }
+    });
+    this.scheduleRerender();
   }
 });
 
-createWidget("layouts-topic-lists-list", {
-  tagName: "div.layouts-topic-lists-list",
+createWidget("layouts-topic-list-widget", {
+  tagName: "div",
+  
+  buildClasses(attrs) {
+    return `layouts-topic-list-widget${attrs.list.active ? ' active' : ''}`;
+  },
   
   html(attrs) {
-    const { list, loadingTopicLists } = attrs;
+    const { list } = attrs;
+    
     let topicList;
-    let result = [
-      h('h3', h('a', {
-        attributes: { href: `/${list.filter}` }},
-        list.name
-      ))
-    ];
-        
-    if (list.topics.length) {      
-      topicList = this.buildTopicList(list.topics);
-    } else if (loadingTopicLists) {
+    let result = [];
+
+    if (list.loading) {
       topicList = this.buildPlaceholderList(list.max);
+    } else if (list.topics.length) {      
+      topicList = this.buildTopicList(list.topics);
+    } else {
+      topicList = [h('li', h('span', I18n.t(themePrefix("no_topics"))))];
     }
     result.push(h('ul', topicList));
-    
+
     return result;
   },
   
@@ -62,12 +95,22 @@ createWidget("layouts-topic-lists-list", {
   buildTopicList(topics) {
     return topics.map(t => {
       return h('li', this.attach("link", {
-        className: `layouts-topic`,
+        className: `layouts-topic${t.unread > 0 ? ' unread' : ''}`,
         action: "clickTopic",
         actionParam: t,
-        contents: () => (new RawHtml({ html: this.buildTitleHtml(t) }))
+        contents: () => {
+          let result = [
+            new RawHtml({ html: this.buildTitleHtml(t) })
+          ];
+          if (t.unread > 0) {
+            result.push(
+              h('span.badge-notification.new-topic')
+            )
+          }
+          return result;
+        }
       }))
-    })
+    });
   },
   
   buildTitleHtml(topic) {
@@ -83,6 +126,37 @@ createWidget("layouts-topic-lists-list", {
   },
   
   clickTopic(topic) {
+    topic.unseen = false;
+    this.appEvents.trigger('sidebar:toggle', this.attrs.side);
     DiscourseURL.routeTo(topic.url);
   }
 });
+
+export function loadList(attrs) {
+  const { self, list, props } = attrs;
+  const store = getOwner(self).lookup('store:main');
+  list.loading  = true;  
+  store.findFiltered('topicList', {
+    filter: list.filter,
+    params: {
+      status: 'open',
+      no_definitions: true
+    }
+  }).then(result => {
+    if (result && result.topics) {
+      props.topicLists.forEach((group, index) => {
+        if (index == list.groupIndex) {
+          group.forEach(l => (l.active = false))
+        }
+      });
+      list.topics = result.topics.slice(0, list.max);
+      list.active = true;
+    }
+  }).catch((e) => {
+    list.topics = [];
+  }).finally(() => {
+    list.loading = false;
+    list.loaded = true;
+    layouts.addSidebarProps(props);
+  });
+}

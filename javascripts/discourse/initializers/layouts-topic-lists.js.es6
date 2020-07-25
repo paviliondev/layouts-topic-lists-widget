@@ -1,3 +1,5 @@
+import { loadList } from '../widgets/layouts-topic-lists';
+
 const default_max = 5;
 
 export default {
@@ -22,45 +24,48 @@ export default {
     
     const store = container.lookup('store:main');
     const props = {
-      topicLists: {},
+      topicLists: [],
       loadingTopicLists: true
     };
     
-    settings.topic_lists.split('|').forEach(l => {
-      const parts = l.split(',');
-      if (parts && parts.length) {
-        props.topicLists[parts[0]] = {
-          name: parts[0],
-          filter: parts[1],
-          max: (parts[2] !== undefined && parts[2] !== null) ? parts[2] : default_max,
-          topics: []
+    settings.topic_lists.split('|').forEach((item, groupIndex) => {
+      const lists = item.split(':')
+      let listGroup = [];
+      
+      lists.forEach((list, index) => {
+        let listParts = list.split(',');
+        if (listParts && listParts.length) {
+          let hasMax = (listParts[2] !== undefined && listParts[2] !== null);
+          listGroup.push({
+            name: listParts[0],
+            filter: listParts[1],
+            max: hasMax ? listParts[2] : default_max,
+            topics: [],
+            loaded: false,
+            groupIndex,
+            active: index === 0
+          })
         }
-      }
+      })
+      
+      props.topicLists.push(listGroup);
     });
     
-    if (!$.isEmptyObject(props.topicLists)) {
-      addSidebarProps(props);
+    if (props.topicLists.length) {
+      layouts.addSidebarProps(props);
       
-      const listNames = Object.keys(props.topicLists);
-      listNames.forEach((name, index) => { 
-        let list = props.topicLists[name];   
-        store.findFiltered('topicList', {
-          filter: list.filter,
-          status: 'open',
-          no_definitions: true
-        }).then(result => {
-          if (result && result.topics) {
-            list.topics = result.topics.slice(0, list.max);
-          }
-        }).catch((e) => {
-          list.topics = [];
-        }).finally(() => {
-          if (index === (listNames.length - 1)) {
-            props.loadingTopicLists = false;
-          }
-          addSidebarProps(props);
-        });
-      })
+      const firstLists = props.topicLists.reduce((result, listGroup) => {
+        if (listGroup[0]) {
+          result.push(listGroup[0]);
+        }
+        return result;
+      }, []);
+      
+      firstLists.forEach((list, index) => loadList({
+        list,
+        self: this,
+        props
+      }));
     }
   }
 }
