@@ -1,4 +1,5 @@
 import { loadList } from '../widgets/layouts-topic-lists';
+import { all } from "rsvp";
 
 const default_max = 5;
 
@@ -46,26 +47,47 @@ export default {
             active: index === 0
           })
         }
-      })
-      
+      });
+            
       props.topicLists.push(listGroup);
     });
     
     if (props.topicLists.length) {
       layouts.addSidebarProps(props);
       
-      const firstLists = props.topicLists.reduce((result, listGroup) => {
+      const firstLists = [];
+      const otherLists = [];
+      props.topicLists.forEach((listGroup) => {
         if (listGroup[0]) {
-          result.push(listGroup[0]);
+          listGroup.forEach((list, index) => {
+            if (index === 0) {
+              firstLists.push(list);
+            } else {
+              otherLists.push(list);
+            }
+          })
         }
-        return result;
-      }, []);
-      
-      firstLists.forEach((list, index) => loadList({
-        list,
-        self: this,
-        props
-      }));
+      });
+
+      all(
+        firstLists.map(
+          (list, index) => loadList({
+            list,
+            self: this,
+            props
+          })
+        )
+      ).then(() => {
+        all(
+          otherLists.map(
+            (list, index) => loadList({
+              list,
+              self: this,
+              props
+            })
+          )
+        )
+      });
     }
   }
 }

@@ -49,7 +49,7 @@ export default layouts.createLayoutsWidget('topic-lists', {
     });
   },
   
-  changeList(list) {    
+  changeList(list) {
     this.state.topicLists.forEach((group, index) => {
       if (index == list.groupIndex) {
         group.forEach(l => {
@@ -127,7 +127,11 @@ createWidget("layouts-topic-list-widget", {
   
   clickTopic(topic) {
     topic.unseen = false;
-    this.appEvents.trigger('sidebar:toggle', this.attrs.side);
+    this.appEvents.trigger('sidebar:toggle', {
+      side: this.attrs.side,
+      value: false,
+      onlyResponsive: true
+    });
     DiscourseURL.routeTo(topic.url);
   }
 });
@@ -135,7 +139,7 @@ createWidget("layouts-topic-list-widget", {
 export function loadList(attrs) {
   const { self, list, props } = attrs;
   const store = getOwner(self).lookup('store:main');
-  list.loading  = true;  
+  list.loading  = true;
   store.findFiltered('topicList', {
     filter: list.filter,
     params: {
@@ -144,13 +148,7 @@ export function loadList(attrs) {
     }
   }).then(result => {
     if (result && result.topics) {
-      props.topicLists.forEach((group, index) => {
-        if (index == list.groupIndex) {
-          group.forEach(l => (l.active = false))
-        }
-      });
       list.topics = result.topics.slice(0, list.max);
-      list.active = true;
     }
   }).catch((e) => {
     list.topics = [];
