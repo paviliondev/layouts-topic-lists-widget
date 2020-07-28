@@ -130,7 +130,7 @@ createWidget("layouts-topic-list-widget", {
     this.appEvents.trigger('sidebar:toggle', {
       side: this.attrs.side,
       value: false,
-      onlyResponsive: true
+      target: 'responsive'
     });
     DiscourseURL.routeTo(topic.url);
   }
